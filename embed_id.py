@@ -14,7 +14,7 @@ class EmbedID(L.EmbedID):
 		v_norm = xp.sqrt(xp.sum(vec ** 2, axis=1))
 		inner_product = W.dot(vec.T)
 		norm = w_norm.reshape(1, -1).T.dot(v_norm.reshape(1, -1)) + 1e-6
-		# 最初の軸がIDに対応する
+		# 最初の軸がIDに対応
 		return inner_product / norm
 
 	# vec: Variable
@@ -29,7 +29,7 @@ class EmbedID(L.EmbedID):
 			result.to_gpu()
 			return result
 		else:
-			# 最初の軸がIDに対応する
+			# 最初の軸がIDに対応
 			result = self.reverse_argmax(vec)	# Numpy ndarray or Cupy ndarray
 			if to_variable:
 				result = Variable(result)
