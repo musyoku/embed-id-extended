@@ -5,9 +5,8 @@ from chainer import links as L
 
 class EmbedID(L.EmbedID):
 
-	# vec: Variable
+	# vec: Numpy / Cupy
 	def cosine_similarity(self, vec):
-		vec = vec.data
 		W = self.W.data
 		xp = cuda.get_array_module(*(vec,))
 		w_norm = xp.sqrt(xp.sum(W ** 2, axis=1))
@@ -17,41 +16,33 @@ class EmbedID(L.EmbedID):
 		# 最初の軸がIDに対応
 		return inner_product / norm
 
-	# vec: Variable
-	def reverse(self, vec, sample=False, to_cpu=False, to_variable=True):
-		xp = cuda.get_array_module(*(vec.data,))
+	# vec: Numpy / Cupy
+	def reverse(self, vec, sample=False, to_cpu=False):
+		xp = cuda.get_array_module(*(vec,))
 		if sample:
 			result = self.reverse_sampling(vec)	# Numpy ndarray
-			if to_variable:
-				result = Variable(result)
 			if to_cpu or xp is np:
 				return result
-			result.to_gpu()
-			return result
+			return cuda.to_cpu(result)
 		else:
 			# 最初の軸がIDに対応
 			result = self.reverse_argmax(vec)	# Numpy ndarray or Cupy ndarray
-			if to_variable:
-				result = Variable(result)
-				if to_cpu:
-					result.to_cpu()
-				return result
 			if to_cpu and xp is cuda.cupy:
 				result = cuda.to_cpu(result)
 			return result
 			
-	# vec: Variable
+	# vec: Numpy / Cupy
 	# Returns xp
 	def reverse_argmax(self, vec):
-		xp = cuda.get_array_module(*(vec.data,))
+		xp = cuda.get_array_module(*(vec,))
 		cos = self.cosine_similarity(vec)
 		# 最初の軸がIDに対応する
 		return xp.argmax(cos, axis=0)
 
-	# vec: Variable
+	# vec: Numpy / Cupy
 	# Returns np
 	def reverse_sampling(self, vec):
-		xp = cuda.get_array_module(*(vec.data,))
+		xp = cuda.get_array_module(*(vec,))
 		cos = self.cosine_similarity(vec)
 		cos = xp.exp(cos)
 		sum = xp.sum(cos, axis=0)
